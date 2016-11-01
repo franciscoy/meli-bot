@@ -1,9 +1,5 @@
 var express = require('express');
 var server = express();
-var BinaryServer = require('binaryjs').BinaryServer;
-var base64 = require('base64-stream');
-var Stream = require('stream');
-var fs = require("fs");
 var page_token = "EAAEbEbJAC78BAMznWNyMVS0GD7TKLYBhuCSK74QFphfnkZBoILKzZBKLh31wFM7W6lK7jdQbYmkIocbV2xYZCHMem6CvHWJRCmMVJDZAZBNbEm8PvZAsqDHamVlsVhaRaAOl3id6abpRh1dxStIFaMAXdhQXktPuV34jgESh5CJwZDZD";
 var SERVER_PORT = 8080;
 var bodyParser = require('body-parser');
@@ -18,14 +14,14 @@ server.get('/hello',function(req,res){
 
 server.post('/hello',function(req,res){
 	console.log(req.body.entry[0].messaging[0]);
-  //sendTextMessage(req.body.entry[0].messaging[0].recipient.id, 'hola mundo');
+  sendTextMessage(req.body.entry[0].messaging[0].sender.id, 'hola mundo');
   res.sendStatus(200);
 });
 
-function sendTextMessage(recipientId, messageText) {
+function sendTextMessage(senderId, messageText) {
   var messageData = {
     recipient: {
-      id: recipientId
+      id: senderId
     },
     message: {
       text: messageText
