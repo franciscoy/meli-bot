@@ -1,5 +1,5 @@
 {
- "name": "jsmpeg",
+ "name": "bot",
  "version": "1.0.0",
  "description": "TODO",
  "main": "bot.js",
@@ -8,10 +8,6 @@
  },
  "author": "",
  "license": "ISC",
- "bugs": {
-   "url": "https://github.com/nicofaure/jsmpeg/issues"
- },
- "homepage": "https://github.com/nicofaure/jsmpeg#readme",
  "dependencies": {
    "express": "^4.13.4",
    "body-parser": "1.15.2",

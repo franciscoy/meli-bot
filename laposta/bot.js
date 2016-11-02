@@ -13,9 +13,28 @@ server.get('/hello',function(req,res){
 });
 
 server.post('/hello',function(req,res){
-	console.log(req.body.entry[0].messaging[0]);
-  sendTextMessage(req.body.entry[0].messaging[0].sender.id, 'hola mundo');
-  res.sendStatus(200);
+	var data = req.body;
+  // Make sure this is a page subscription
+  if (data.object === 'page') {
+
+    // Iterate over each entry - there may be multiple if batched
+    data.entry.forEach(function(entry) {
+      var pageID = entry.id;
+      var timeOfEvent = entry.time;
+
+      // Iterate over each messaging event
+      entry.messaging.forEach(function(event) {
+        if (event.message) {
+          sendTextMessage(event.sender.id, 'hola mundo');      
+        } else {
+          console.log("Webhook received unknown event: ", event);
+        }
+      });
+    });
+    
+    res.sendStatus(200);
+  }
+
 });
 
 function sendTextMessage(senderId, messageText) {
