@@ -1,6 +1,6 @@
 var express = require('express');
 var server = express();
-var page_token = "EAAEbEbJAC78BAMznWNyMVS0GD7TKLYBhuCSK74QFphfnkZBoILKzZBKLh31wFM7W6lK7jdQbYmkIocbV2xYZCHMem6CvHWJRCmMVJDZAZBNbEm8PvZAsqDHamVlsVhaRaAOl3id6abpRh1dxStIFaMAXdhQXktPuV34jgESh5CJwZDZD";
+var page_token = "EAAQPssZBjhH0BABECz6qsMXKwqbSrO6FhSZBbdHlPK6GHMpX9BLlHDeKiiEf5RA4ktWJHI1MZATOGjDFv9ZAyzZAvBpZBxJdllPBA021C8DHDmwmS9FxAxZAhN6GLUVgdb6v1wSmU3T4dhmZCkvzjWvzK1K0ZAyvPBHJmZAXFRR2LClAZDZD";
 var SERVER_PORT = 8080;
 var bodyParser = require('body-parser');
 var request = require('request');
@@ -25,7 +25,8 @@ server.post('/hello',function(req,res){
       // Iterate over each messaging event
       entry.messaging.forEach(function(event) {
         if (event.message) {
-          sendTextMessage(event.sender.id, 'hola mundo');      
+          callMeliSearchApi(event.sender.id, event.message.text);
+          //sendTextMessage(event.sender.id, 'hola mundo');      
         } else {
           console.log("Webhook received unknown event: ", event);
         }
@@ -70,6 +71,65 @@ function callSendAPI(messageData) {
       console.error(error);
     }
   });  
+}
+
+function callMeliSearchApi(senderId, query) {
+ request({
+   uri: 'https://api.mercadolibre.com/sites/MLA/search?q=',
+   qs: { q: query },
+   method: 'GET'
+ }, function (error, response, body) {
+   if (!error && response.statusCode == 200) {
+     var recipientId = body.recipient_id;
+     var messageId = body.message_id;
+
+     var bodyJSON = JSON.parse(body);
+     var itemArray = extractItems(bodyJSON.results);
+
+     sendGenericMessage(senderId, itemArray);
+   } else {
+     console.error("Unable to call meli api.");
+     console.error(response);
+     console.error(error);
+   }
+ });  
+}
+
+function sendGenericMessage(recipientId,items) {
+ var messageData = {
+   recipient: {
+     id: recipientId
+   },
+   message: {
+     attachment: {
+       type: "template",
+       payload: {
+         template_type: "generic",
+         elements: items
+       }
+     }
+   }
+ }
+ callSendAPI(messageData);
+}
+
+function extractItems(dataArray) {
+ var items = [];
+ for (var i = 0; i < Math.min(5, dataArray.length); i++) {
+   var item = {};
+   item.title = dataArray[i].title;
+   item.subtitle = "ARS " + dataArray[i].price;
+   item.item_url = null;
+   item.image_url = dataArray[i].thumbnail;
+   item.buttons = [{
+             type: "web_url",
+             url: dataArray[i].permalink,
+             title: "Abrir item"
+           }];
+
+   items.push(item);
+ }
+ return items;
 }
 
 server.listen(SERVER_PORT);
