@@ -1,9 +1,11 @@
 var express = require('express');
 var server = express();
-var page_token = "EAAQPssZBjhH0BABECz6qsMXKwqbSrO6FhSZBbdHlPK6GHMpX9BLlHDeKiiEf5RA4ktWJHI1MZATOGjDFv9ZAyzZAvBpZBxJdllPBA021C8DHDmwmS9FxAxZAhN6GLUVgdb6v1wSmU3T4dhmZCkvzjWvzK1K0ZAyvPBHJmZAXFRR2LClAZDZD";
+var page_token = "";
 var SERVER_PORT = 8080;
 var bodyParser = require('body-parser');
 var request = require('request');
+const {Wit,log} = require('node-wit');
+const client = new Wit({accessToken: ''});
 
 server.use(bodyParser.urlencoded({ extended: false }));
 server.use(bodyParser.json());
@@ -24,8 +26,14 @@ server.post('/hello',function(req,res){
 
       // Iterate over each messaging event
       entry.messaging.forEach(function(event) {
-        if (event.message) {
-          callMeliSearchApi(event.sender.id, event.message.text);
+        if (event.message) {          
+          client.message(event.message.text, {})
+          .then((data) => {
+            console.log(data.entities.query[0].value);
+            sendTextMessage(event.sender.id, 'Buscando ' + data.entities.query[0].value);
+            callMeliSearchApi(event.sender.id, data.entities.query[0].value);
+          })
+          .catch(console.error);
           //sendTextMessage(event.sender.id, 'hola mundo');      
         } else {
           console.log("Webhook received unknown event: ", event);
@@ -74,6 +82,8 @@ function callSendAPI(messageData) {
 }
 
 function callMeliSearchApi(senderId, query) {
+  console.log('https://api.mercadolibre.com/sites/MLA/search?q='+query);
+
  request({
    uri: 'https://api.mercadolibre.com/sites/MLA/search?q=',
    qs: { q: query },
